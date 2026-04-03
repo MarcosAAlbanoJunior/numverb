@@ -15,32 +15,55 @@ class CurrencyProviderTest {
 
     @ParameterizedTest(name = "{0}")
     @CsvSource({
-        "BRL, real,  reais,   centavo, centavos",
-        "USD, dólar, dólares, centavo, centavos",
-        "EUR, euro,  euros,   centavo, centavos",
+        "BRL, real,  reais,   centavo, centavos, masculine, masculine",
+        "USD, dólar, dólares, centavo, centavos, masculine, masculine",
+        "EUR, euro,  euros,   centavo, centavos, masculine, masculine",
     })
-    @DisplayName("loads supported currencies")
-    void loadsSupported(String code, String singular, String plural, String subSingular, String subPlural) {
+    @DisplayName("loads all fields of supported currencies")
+    void loadsSupported(String code, String singular, String plural,
+                        String subSingular, String subPlural,
+                        String gender, String subunitGender) {
         Currency c = provider.getCurrency(code);
-        assertEquals(code, c.code());
-        assertEquals(singular, c.singular());
-        assertEquals(plural, c.plural());
-        assertEquals(subSingular, c.subunitSingular());
-        assertEquals(subPlural, c.subunitPlural());
-        assertEquals("masculine", c.gender());
+        assertAll(
+                () -> assertEquals(code,         c.code()),
+                () -> assertEquals(singular,     c.singular()),
+                () -> assertEquals(plural,        c.plural()),
+                () -> assertEquals(subSingular,   c.subunitSingular()),
+                () -> assertEquals(subPlural,     c.subunitPlural()),
+                () -> assertEquals(gender,        c.gender()),
+                () -> assertEquals(subunitGender, c.subunitGender())
+        );
     }
 
     @Test
-    @DisplayName("throws for unsupported currency")
+    @DisplayName("throws UnsupportedCurrencyException for unknown code")
     void throwsForUnsupported() {
         assertThrows(UnsupportedCurrencyException.class, () -> provider.getCurrency("XYZ"));
     }
 
     @Test
-    @DisplayName("caches currency (same instance)")
+    @DisplayName("exception message contains the unsupported code")
+    void exceptionMessageContainsCode() {
+        UnsupportedCurrencyException ex = assertThrows(UnsupportedCurrencyException.class,
+                () -> provider.getCurrency("GBP"));
+        assertTrue(ex.getMessage().contains("GBP"));
+    }
+
+    @Test
+    @DisplayName("caches currency — same instance on repeated calls")
     void cachesCurrency() {
-        Currency first = provider.getCurrency("BRL");
+        Currency first  = provider.getCurrency("BRL");
         Currency second = provider.getCurrency("BRL");
         assertSame(first, second);
+    }
+
+    @Test
+    @DisplayName("caches are independent across different instances")
+    void separateInstancesHaveSeparateCaches() {
+        Currency fromFirst  = new CurrencyProvider().getCurrency("BRL");
+        Currency fromSecond = new CurrencyProvider().getCurrency("BRL");
+        // same value, but different CurrencyProvider instances = different cache entries
+        assertEquals(fromFirst, fromSecond);
+        assertNotSame(fromFirst, fromSecond);
     }
 }

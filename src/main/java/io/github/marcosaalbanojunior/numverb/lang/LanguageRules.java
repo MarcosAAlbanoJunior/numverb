@@ -22,6 +22,8 @@ public class LanguageRules {
 
     private static final Set<String> SUPPORTED = Set.of("pt-BR");
 
+    private static final BigInteger MILLION = BigInteger.valueOf(1_000_000L);
+
     private static final BigInteger[] SCALE_VALUES = {
         new BigInteger("1000000000000000000000000"), // setilhão  (10^24)
         new BigInteger("1000000000000000000000"),    // sextilhão (10^21)
@@ -59,6 +61,11 @@ public class LanguageRules {
     /**
      * Converts a non-negative integer to its word representation.
      *
+     * <p>The {@code gender} parameter applies only to the final remainder (&lt; 1000).
+     * Scale word counts (thousands, millions, etc.) always use the gender defined by
+     * {@code scale.gender} in the language properties, since scale words have their
+     * own grammatical gender independent of the noun being counted.</p>
+     *
      * @param number the number to convert; must be &ge; 0
      * @param gender grammatical gender of the primary unit ({@code "masculine"} or {@code "feminine"})
      * @return the number expressed as words
@@ -67,6 +74,10 @@ public class LanguageRules {
         if (number.equals(BigInteger.ZERO)) {
             return prop("unit.0");
         }
+
+        // Gender used when counting scale words (e.g. "dois" in "dois milhões").
+        // Scale words have their own grammatical gender, independent of the currency gender.
+        String scaleGender = prop("scale.gender");
 
         List<ScalePart> parts = new ArrayList<>();
         BigInteger remaining = number;
@@ -84,11 +95,11 @@ public class LanguageRules {
                     // "mil" is not prefixed with "um" when count == 1
                     String countWords = count.equals(BigInteger.ONE)
                             ? ""
-                            : convertUpTo999(count.longValueExact(), gender);
+                            : convertUpTo999(count.longValueExact(), scaleGender);
                     String scaleWord = prop("scale.mil");
                     words = countWords.isEmpty() ? scaleWord : countWords + " " + scaleWord;
                 } else {
-                    String countWords = convertUpTo999(count.longValueExact(), gender);
+                    String countWords = convertUpTo999(count.longValueExact(), scaleGender);
                     boolean plural = count.compareTo(BigInteger.ONE) > 0;
                     String scaleWord = plural
                             ? prop("scale." + scaleKey + ".plural")
@@ -100,6 +111,8 @@ public class LanguageRules {
             }
         }
 
+        // The remaining portion (< 1000) uses the caller-supplied gender,
+        // since this is where the currency/noun gender actually applies.
         if (remaining.compareTo(BigInteger.ZERO) > 0) {
             String words = convertUpTo999(remaining.longValueExact(), gender);
             parts.add(new ScalePart(remaining, words));
@@ -115,6 +128,29 @@ public class LanguageRules {
      */
     public String getConnector() {
         return prop("connector");
+    }
+
+    /**
+     * Returns the separator string to place between the number words and the currency word.
+     *
+     * <p>In pt-BR, round-million values use a preposition:
+     * {@code "um milhão <b>de</b> reais"}.
+     * All other values use a plain space.</p>
+     *
+     * <p>The preposition is read from the {@code currency.preposition} property.
+     * Languages without this property always return a plain space.</p>
+     *
+     * @param intPart the integer (non-cents) portion of the monetary amount
+     * @return {@code " de "} for round-million values in pt-BR; {@code " "} otherwise
+     */
+    public String getCurrencyJoiner(BigInteger intPart) {
+        if (!props.containsKey("currency.preposition")) {
+            return " ";
+        }
+        if (intPart.compareTo(MILLION) >= 0 && intPart.remainder(MILLION).equals(BigInteger.ZERO)) {
+            return " " + prop("currency.preposition") + " ";
+        }
+        return " ";
     }
 
     // -------------------------------------------------------------------------

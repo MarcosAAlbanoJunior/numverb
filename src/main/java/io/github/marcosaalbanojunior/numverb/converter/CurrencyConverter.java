@@ -25,8 +25,6 @@ public class CurrencyConverter implements NumberToWordsConverter {
     private static final BigDecimal MAX_VALUE =
             new BigDecimal("999999999999999999999999.99");
 
-    private static final BigInteger MILLION = BigInteger.valueOf(1_000_000L);
-
     private final LanguageProvider languageProvider;
 
     /**
@@ -84,15 +82,11 @@ public class CurrencyConverter implements NumberToWordsConverter {
     private String buildIntegerPart(BigInteger intPart, Currency currency, LanguageRules rules) {
         String numberWords = rules.convertToWords(intPart, currency.gender());
         String currencyWord = intPart.equals(BigInteger.ONE) ? currency.singular() : currency.plural();
-
-        boolean useDe = intPart.compareTo(MILLION) >= 0
-                && intPart.remainder(MILLION).equals(BigInteger.ZERO);
-
-        return numberWords + (useDe ? " de " : " ") + currencyWord;
+        return numberWords + rules.getCurrencyJoiner(intPart) + currencyWord;
     }
 
     private String buildCentPart(int centPart, Currency currency, LanguageRules rules) {
-        String numberWords = rules.convertToWords(BigInteger.valueOf(centPart), currency.gender());
+        String numberWords = rules.convertToWords(BigInteger.valueOf(centPart), currency.subunitGender());
         String currencyWord = centPart == 1 ? currency.subunitSingular() : currency.subunitPlural();
         return numberWords + " " + currencyWord;
     }
