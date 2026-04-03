@@ -9,6 +9,7 @@ import io.github.marcosaalbanojunior.numverb.lang.LanguageProvider;
 import io.github.marcosaalbanojunior.numverb.model.ConversionContext;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -17,22 +18,32 @@ import java.util.Objects;
  * <p>Provides a fluent API for converting numbers to their word representation.</p>
  *
  * <pre>{@code
- * // Basic usage — defaults to pt-BR + BRL
+ * // Default: pt-BR + BRL
  * String result = NumVerb.currency(new BigDecimal("1234.68")).toWords();
  * // → "mil duzentos e trinta e quatro reais e sessenta e oito centavos"
  *
- * // With explicit language and currency
- * String result = NumVerb.currency(new BigDecimal("1234.68"))
- *     .language("pt-BR")
- *     .currency("USD")
+ * // Convenience: pass the amount as a String to avoid floating-point surprises
+ * String result = NumVerb.currency("1234.68").toWords();
+ *
+ * // Explicit language and currency
+ * String result = NumVerb.currency("1234.68")
+ *     .language(Language.PT_BR)
+ *     .currency(Currencies.USD)
  *     .toWords();
  *
- * // Cardinal number
+ * // Cardinal number — long overload
  * String result = NumVerb.cardinal(1234).language("pt-BR").toWords();
  * // → "mil duzentos e trinta e quatro"
+ *
+ * // Cardinal number — full range (up to setilhão) via BigDecimal
+ * String result = NumVerb.cardinal(new BigDecimal("1000000000000000000000000")).toWords();
+ * // → "um setilhão"
  * }</pre>
  *
  * <p>All public methods are thread-safe.</p>
+ *
+ * @see Currencies
+ * @see Language
  */
 public final class NumVerb {
 
@@ -42,6 +53,10 @@ public final class NumVerb {
     private static final CardinalConverter CARDINAL_CONVERTER = new CardinalConverter(LANGUAGE_PROVIDER);
 
     private NumVerb() {}
+
+    // -------------------------------------------------------------------------
+    // Currency factory methods
+    // -------------------------------------------------------------------------
 
     /**
      * Starts a currency conversion for the given monetary value.
@@ -57,6 +72,28 @@ public final class NumVerb {
     }
 
     /**
+     * Starts a currency conversion for the given monetary value expressed as a String.
+     *
+     * <p>This overload avoids floating-point precision issues that arise from
+     * {@link BigDecimal#BigDecimal(double)}.
+     * Prefer this over passing a {@code double} literal.</p>
+     *
+     * <p>Defaults: language {@code "pt-BR"}, currency {@code "BRL"}.</p>
+     *
+     * @param value the monetary value as a decimal string (e.g., {@code "1234.68"}); must not be null
+     * @return a builder to configure and execute the conversion
+     * @throws NumberFormatException if {@code value} is not a valid decimal string
+     */
+    public static CurrencyBuilder currency(String value) {
+        Objects.requireNonNull(value, "value cannot be null");
+        return new CurrencyBuilder(new BigDecimal(value));
+    }
+
+    // -------------------------------------------------------------------------
+    // Cardinal factory methods
+    // -------------------------------------------------------------------------
+
+    /**
      * Starts a cardinal number conversion for the given value.
      *
      * <p>Default: language {@code "pt-BR"}.</p>
@@ -66,6 +103,39 @@ public final class NumVerb {
      */
     public static CardinalBuilder cardinal(long value) {
         return new CardinalBuilder(BigDecimal.valueOf(value));
+    }
+
+    /**
+     * Starts a cardinal number conversion for the given value.
+     *
+     * <p>Use this overload to handle numbers larger than {@link Long#MAX_VALUE}
+     * (e.g., quintilhões, setilhões).
+     * Only the integer part of the value is converted; any fractional part is ignored.</p>
+     *
+     * <p>Default: language {@code "pt-BR"}.</p>
+     *
+     * @param value the number to convert; must not be null
+     * @return a builder to configure and execute the conversion
+     */
+    public static CardinalBuilder cardinal(BigDecimal value) {
+        Objects.requireNonNull(value, "value cannot be null");
+        return new CardinalBuilder(value);
+    }
+
+    /**
+     * Starts a cardinal number conversion for the given value.
+     *
+     * <p>Use this overload to handle numbers larger than {@link Long#MAX_VALUE}
+     * (e.g., quintilhões, setilhões).</p>
+     *
+     * <p>Default: language {@code "pt-BR"}.</p>
+     *
+     * @param value the number to convert; must not be null
+     * @return a builder to configure and execute the conversion
+     */
+    public static CardinalBuilder cardinal(BigInteger value) {
+        Objects.requireNonNull(value, "value cannot be null");
+        return new CardinalBuilder(new BigDecimal(value));
     }
 
     // -------------------------------------------------------------------------
@@ -86,7 +156,7 @@ public final class NumVerb {
         }
 
         /**
-         * Sets the target language.
+         * Sets the target language by code.
          *
          * @param code a BCP 47 language tag (e.g., {@code "pt-BR"})
          * @return this builder
@@ -97,10 +167,23 @@ public final class NumVerb {
         }
 
         /**
-         * Sets the target currency.
+         * Sets the target language.
+         *
+         * @param language the target language; must not be null
+         * @return this builder
+         * @see Language#PT_BR
+         */
+        public CurrencyBuilder language(Language language) {
+            this.languageCode = Objects.requireNonNull(language, "language cannot be null").code();
+            return this;
+        }
+
+        /**
+         * Sets the target currency by ISO 4217 code.
          *
          * @param code an ISO 4217 currency code (e.g., {@code "BRL"}, {@code "USD"}, {@code "EUR"})
          * @return this builder
+         * @see Currencies
          */
         public CurrencyBuilder currency(String code) {
             this.currencyCode = Objects.requireNonNull(code, "currency code cannot be null");
@@ -133,13 +216,25 @@ public final class NumVerb {
         }
 
         /**
-         * Sets the target language.
+         * Sets the target language by code.
          *
          * @param code a BCP 47 language tag (e.g., {@code "pt-BR"})
          * @return this builder
          */
         public CardinalBuilder language(String code) {
             this.languageCode = Objects.requireNonNull(code, "language code cannot be null");
+            return this;
+        }
+
+        /**
+         * Sets the target language.
+         *
+         * @param language the target language; must not be null
+         * @return this builder
+         * @see Language#PT_BR
+         */
+        public CardinalBuilder language(Language language) {
+            this.languageCode = Objects.requireNonNull(language, "language cannot be null").code();
             return this;
         }
 
