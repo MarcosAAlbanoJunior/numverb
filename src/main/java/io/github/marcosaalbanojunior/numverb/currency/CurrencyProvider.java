@@ -12,16 +12,19 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Loads and caches currency definitions from classpath property files.
+ * Loads and caches language-specific currency definitions from classpath property files.
  *
- * <p>Currency files are located at {@code /currencies/{code}.properties} on the classpath
- * and are encoded in UTF-8.</p>
+ * <p>Currency files are located at
+ * {@code /currencies/{languageCode}/{currencyCode}.properties} on the classpath
+ * and are encoded in UTF-8. Currency names are language-specific — "dólar" for pt-BR
+ * and "dollar" for en-US live in separate files under their respective language
+ * subdirectory.</p>
  *
  * <p>This class is thread-safe.</p>
  */
 public class CurrencyProvider {
 
-    private static final String RESOURCE_PATH = "/currencies/%s.properties";
+    private static final String RESOURCE_PATH = "/currencies/%s/%s.properties";
 
     private static final List<String> REQUIRED_KEYS = List.of(
             "currency.code",
@@ -36,22 +39,24 @@ public class CurrencyProvider {
     private final Map<String, Currency> cache = new ConcurrentHashMap<>();
 
     /**
-     * Returns the {@link Currency} for the given ISO 4217 currency code.
+     * Returns the {@link Currency} for the given language and ISO 4217 currency code.
      *
-     * @param currencyCode ISO 4217 code (e.g., {@code "BRL"})
+     * @param languageCode BCP 47 language tag (e.g. {@code "pt-BR"}, {@code "en-US"})
+     * @param currencyCode ISO 4217 code (e.g. {@code "BRL"}, {@code "USD"})
      * @return the loaded {@link Currency}
-     * @throws UnsupportedCurrencyException if no property file exists for the currency
+     * @throws UnsupportedCurrencyException if no property file exists for the combination
      * @throws IllegalStateException if the property file is missing a required key
      */
-    public Currency getCurrency(String currencyCode) {
-        return cache.computeIfAbsent(currencyCode, this::load);
+    public Currency getCurrency(String languageCode, String currencyCode) {
+        String key = languageCode + ":" + currencyCode;
+        return cache.computeIfAbsent(key, k -> load(languageCode, currencyCode));
     }
 
-    private Currency load(String code) {
-        String path = String.format(RESOURCE_PATH, code);
+    private Currency load(String languageCode, String currencyCode) {
+        String path = String.format(RESOURCE_PATH, languageCode, currencyCode);
         try (InputStream is = getClass().getResourceAsStream(path)) {
             if (is == null) {
-                throw new UnsupportedCurrencyException(code);
+                throw new UnsupportedCurrencyException(currencyCode, languageCode);
             }
             Properties props = new Properties();
             props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
@@ -59,7 +64,8 @@ public class CurrencyProvider {
             for (String key : REQUIRED_KEYS) {
                 if (!props.containsKey(key)) {
                     throw new IllegalStateException(
-                            "Currency file " + code + ".properties is missing required property: '" + key + "'");
+                            "Currency file " + languageCode + "/" + currencyCode
+                            + ".properties is missing required property: '" + key + "'");
                 }
             }
 
@@ -73,7 +79,7 @@ public class CurrencyProvider {
                     props.getProperty("currency.subunit.gender")
             );
         } catch (IOException e) {
-            throw new UnsupportedCurrencyException(code, e);
+            throw new UnsupportedCurrencyException(currencyCode, e);
         }
     }
 }

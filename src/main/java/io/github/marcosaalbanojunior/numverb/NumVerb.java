@@ -6,6 +6,7 @@ import io.github.marcosaalbanojunior.numverb.currency.Currency;
 import io.github.marcosaalbanojunior.numverb.currency.CurrencyProvider;
 import io.github.marcosaalbanojunior.numverb.lang.Language;
 import io.github.marcosaalbanojunior.numverb.lang.LanguageProvider;
+import io.github.marcosaalbanojunior.numverb.lang.LanguageRules;
 import io.github.marcosaalbanojunior.numverb.model.ConversionContext;
 
 import java.math.BigDecimal;
@@ -196,8 +197,11 @@ public final class NumVerb {
          * @return the monetary value expressed in words
          */
         public String toWords() {
+            // Validate language first so UnsupportedLanguageException always takes
+            // precedence over UnsupportedCurrencyException.
+            LanguageRules.requireSupported(languageCode);
             Language language = new Language(languageCode);
-            Currency currency = CURRENCY_PROVIDER.getCurrency(currencyCode);
+            Currency currency = CURRENCY_PROVIDER.getCurrency(languageCode, currencyCode);
             ConversionContext context = new ConversionContext(language, currency);
             return CURRENCY_CONVERTER.convert(value, context);
         }
@@ -244,6 +248,9 @@ public final class NumVerb {
          * @return the cardinal number expressed in words
          */
         public String toWords() {
+            // Validate language first — UnsupportedLanguageException takes precedence
+            // over NumberOutOfRangeException, same contract as CurrencyBuilder.
+            LanguageRules.requireSupported(languageCode);
             Language language = new Language(languageCode);
             ConversionContext context = new ConversionContext(language, null);
             return CARDINAL_CONVERTER.convert(value, context);

@@ -1,5 +1,6 @@
 package io.github.marcosaalbanojunior.numverb.converter;
 
+import io.github.marcosaalbanojunior.numverb.exception.NumberOutOfRangeException;
 import io.github.marcosaalbanojunior.numverb.lang.LanguageProvider;
 import io.github.marcosaalbanojunior.numverb.lang.LanguageRules;
 import io.github.marcosaalbanojunior.numverb.model.ConversionContext;
@@ -16,6 +17,13 @@ import java.util.Objects;
  * <p>This class is thread-safe.</p>
  */
 public class CardinalConverter implements NumberToWordsConverter {
+
+    /**
+     * Maximum supported value: 999 setilhões + all lower scales filled with 999.
+     * = 999_999_999_999_999_999_999_999_999 (27 nines, 27 digits)
+     * Above this the count at the setilhão scale slot would exceed 999.
+     */
+    private static final BigInteger MAX_CARDINAL = new BigInteger("999999999999999999999999999");
 
     private final LanguageProvider languageProvider;
 
@@ -39,6 +47,13 @@ public class CardinalConverter implements NumberToWordsConverter {
         Objects.requireNonNull(context, "context cannot be null");
 
         BigInteger intPart = value.toBigInteger();
+        if (intPart.signum() < 0) {
+            throw new NumberOutOfRangeException("Negative values are not supported: " + value);
+        }
+        if (intPart.compareTo(MAX_CARDINAL) > 0) {
+            throw new NumberOutOfRangeException(
+                    "Value exceeds the maximum supported range of " + MAX_CARDINAL + ": " + intPart);
+        }
         LanguageRules rules = new LanguageRules(context.language().code(), languageProvider);
         return rules.convertToWords(intPart, "masculine");
     }

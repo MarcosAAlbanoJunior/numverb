@@ -27,5 +27,8 @@ public final class Currencies {
     /** Euro. */
     public static final String EUR = "EUR";
 
+    /** British Pound Sterling. */
+    public static final String GBP = "GBP";
+
     private Currencies() {}
 }

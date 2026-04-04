@@ -12,6 +12,9 @@ public record Language(String code) {
     /** Portuguese (Brazil). */
     public static final Language PT_BR = new Language("pt-BR");
 
+    /** English (United States). */
+    public static final Language EN_US = new Language("en-US");
+
     /**
      * @param code BCP 47 language tag; must not be null or blank
      */
