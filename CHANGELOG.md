@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-04-04
+
 ### Fixed
 - **`CardinalConverter` missing upper-bound check** — cardinal values exceeding the maximum
   supported range (999 setilhões / 999 septillion) previously escaped with an internal
   `IllegalArgumentException` or `ArithmeticException`. They now throw
   `NumberOutOfRangeException`, consistent with `CurrencyConverter`.
+- **BRL plural in en-US corrected from `reals` to `reais`** — English financial media
+  (Bloomberg, Reuters, BCB) consistently uses the Portuguese plural "reais"; "reals" is
+  an anglicisation that is not in common use.
 - **Dead code removed in `LanguageRules.joinParts`** — an unreachable
   `if (parts.isEmpty()) return ""` guard was present; removed as `joinParts` is only
   ever called when the number is non-zero.

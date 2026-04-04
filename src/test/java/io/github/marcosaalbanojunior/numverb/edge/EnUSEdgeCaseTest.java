@@ -158,9 +158,9 @@ class EnUSEdgeCaseTest {
         }
 
         @Test
-        @DisplayName("BRL in en-US plural — 'two reals'")
+        @DisplayName("BRL in en-US plural — 'two reais'")
         void brlEnUSPlural() {
-            assertEquals("two reals",
+            assertEquals("two reais",
                     NumVerb.currency("2.00").language(Language.EN_US).currency(Currencies.BRL).toWords());
         }
 
