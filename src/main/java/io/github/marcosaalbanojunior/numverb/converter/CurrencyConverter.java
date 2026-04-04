@@ -43,6 +43,7 @@ public class CurrencyConverter implements NumberToWordsConverter {
     public String convert(BigDecimal value, ConversionContext context) {
         Objects.requireNonNull(value, "value cannot be null");
         Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(context.currency(), "CurrencyConverter requires a non-null currency in the context");
 
         if (value.compareTo(BigDecimal.ZERO) < 0) {
             throw new NumberOutOfRangeException("Negative values are not supported: " + value);

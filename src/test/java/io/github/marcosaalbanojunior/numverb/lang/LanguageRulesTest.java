@@ -248,6 +248,6 @@ class LanguageRulesTest {
     @DisplayName("unsupported language throws UnsupportedLanguageException")
     void unsupportedLanguage() {
         assertThrows(UnsupportedLanguageException.class,
-                () -> new LanguageRules("en-US", new LanguageProvider()));
+                () -> new LanguageRules("fr-FR", new LanguageProvider()));
     }
 }

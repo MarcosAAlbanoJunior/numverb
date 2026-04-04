@@ -59,6 +59,20 @@ class EdgeCaseTest {
                 NumVerb.currency(new BigDecimal("999999999999999999999999.99")).toWords());
     }
 
+    @Test
+    @DisplayName("cardinal exceeding max range throws NumberOutOfRangeException")
+    void cardinalOverRangeThrows() {
+        assertThrows(NumberOutOfRangeException.class,
+                () -> NumVerb.cardinal(new BigDecimal("1000000000000000000000000000")).toWords());
+    }
+
+    @Test
+    @DisplayName("maximum supported cardinal does not throw")
+    void maxCardinalDoesNotThrow() {
+        assertDoesNotThrow(() ->
+                NumVerb.cardinal(new BigDecimal("999999999999999999999999")).toWords());
+    }
+
     // -------------------------------------------------------------------------
     // Null inputs
     // -------------------------------------------------------------------------
@@ -209,17 +223,120 @@ class EdgeCaseTest {
     }
 
     // -------------------------------------------------------------------------
-    // All supported currencies
+    // USD — pt-BR
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("all supported currencies produce output without throwing")
-    void allCurrencies() {
-        assertDoesNotThrow(() -> {
-            NumVerb.currency("1.00").currency(Currencies.BRL).toWords();
-            NumVerb.currency("1.00").currency(Currencies.USD).toWords();
-            NumVerb.currency("1.00").currency(Currencies.EUR).toWords();
-        });
+    @DisplayName("um dólar — USD singular")
+    void umDolar() {
+        assertEquals("um dólar",
+                NumVerb.currency("1.00").language(Language.PT_BR).currency(Currencies.USD).toWords());
+    }
+
+    @Test
+    @DisplayName("dois dólares — USD plural")
+    void doisDolares() {
+        assertEquals("dois dólares",
+                NumVerb.currency("2.00").language(Language.PT_BR).currency(Currencies.USD).toWords());
+    }
+
+    @Test
+    @DisplayName("um dólar e cinquenta centavos — USD with cents")
+    void umDolarCinquentaCentavos() {
+        assertEquals("um dólar e cinquenta centavos",
+                NumVerb.currency("1.50").language(Language.PT_BR).currency(Currencies.USD).toWords());
+    }
+
+    @Test
+    @DisplayName("cinquenta centavos (USD) — cents only")
+    void cinquentaCentavosUsd() {
+        assertEquals("cinquenta centavos",
+                NumVerb.currency("0.50").language(Language.PT_BR).currency(Currencies.USD).toWords());
+    }
+
+    @Test
+    @DisplayName("um milhão de dólares — USD with 'de' preposition")
+    void umMilhaoDeDolares() {
+        assertEquals("um milhão de dólares",
+                NumVerb.currency("1000000.00").language(Language.PT_BR).currency(Currencies.USD).toWords());
+    }
+
+    // -------------------------------------------------------------------------
+    // EUR — pt-BR
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("um euro — EUR singular")
+    void umEuro() {
+        assertEquals("um euro",
+                NumVerb.currency("1.00").language(Language.PT_BR).currency(Currencies.EUR).toWords());
+    }
+
+    @Test
+    @DisplayName("dois euros — EUR plural")
+    void doisEuros() {
+        assertEquals("dois euros",
+                NumVerb.currency("2.00").language(Language.PT_BR).currency(Currencies.EUR).toWords());
+    }
+
+    @Test
+    @DisplayName("um euro e um centavo — EUR with cents")
+    void umEuroEUmCentavo() {
+        assertEquals("um euro e um centavo",
+                NumVerb.currency("1.01").language(Language.PT_BR).currency(Currencies.EUR).toWords());
+    }
+
+    @Test
+    @DisplayName("cinquenta centavos (EUR) — cents only")
+    void cinquentaCentavosEur() {
+        assertEquals("cinquenta centavos",
+                NumVerb.currency("0.50").language(Language.PT_BR).currency(Currencies.EUR).toWords());
+    }
+
+    @Test
+    @DisplayName("um milhão de euros — EUR with 'de' preposition")
+    void umMilhaoDeEuros() {
+        assertEquals("um milhão de euros",
+                NumVerb.currency("1000000.00").language(Language.PT_BR).currency(Currencies.EUR).toWords());
+    }
+
+    // -------------------------------------------------------------------------
+    // GBP — feminine gender in pt-BR
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("uma libra — GBP singular feminine")
+    void umaLibra() {
+        assertEquals("uma libra",
+                NumVerb.currency("1.00").language(Language.PT_BR).currency(Currencies.GBP).toWords());
+    }
+
+    @Test
+    @DisplayName("duas libras — GBP plural feminine")
+    void duasLibras() {
+        assertEquals("duas libras",
+                NumVerb.currency("2.00").language(Language.PT_BR).currency(Currencies.GBP).toWords());
+    }
+
+    @Test
+    @DisplayName("uma libra e um penny — GBP com subunidade")
+    void umaLibraEUmPenny() {
+        assertEquals("uma libra e um penny",
+                NumVerb.currency("1.01").language(Language.PT_BR).currency(Currencies.GBP).toWords());
+    }
+
+    @Test
+    @DisplayName("cinquenta pence — GBP subunidade plural")
+    void cinquentaPence() {
+        assertEquals("cinquenta pence",
+                NumVerb.currency("0.50").language(Language.PT_BR).currency(Currencies.GBP).toWords());
+    }
+
+    @Test
+    @DisplayName("duzentas libras — feminino nas centenas")
+    void duzentas() {
+        assertEquals("duzentas libras",
+                NumVerb.currency("200.00").language(Language.PT_BR).currency(Currencies.GBP).toWords());
     }
 
     // -------------------------------------------------------------------------
