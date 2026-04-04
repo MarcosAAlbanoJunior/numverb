@@ -50,7 +50,7 @@ class CurrencyProviderTest {
         "USD, dollar, dollars, cent,   cents,    masculine, masculine",
         "EUR, euro,   euros,   cent,   cents,    masculine, masculine",
         "GBP, pound,  pounds,  penny,  pence,    masculine, masculine",
-        "BRL, real,   reals,   centavo, centavos, masculine, masculine",
+        "BRL, real,   reais,   centavo, centavos, masculine, masculine",
     })
     @DisplayName("loads all fields — en-US")
     void loadsEnUs(String code, String singular, String plural,

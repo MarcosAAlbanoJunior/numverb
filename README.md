@@ -37,14 +37,14 @@ Add the dependency to your Maven project:
 <dependency>
     <groupId>io.github.marcosaalbanojunior</groupId>
     <artifactId>numverb</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
 Or with Gradle:
 
 ```groovy
-implementation 'io.github.marcosaalbanojunior:numverb:0.3.0'
+implementation 'io.github.marcosaalbanojunior:numverb:0.3.1'
 ```
 
 ## Usage
@@ -136,7 +136,7 @@ to the correct name for the requested language automatically.
 
 | Code  | pt-BR                        | en-US                      | Constant         |
 |-------|------------------------------|----------------------------|------------------|
-| `BRL` | real / reais                 | real / reals               | `Currencies.BRL` |
+| `BRL` | real / reais                 | real / reais               | `Currencies.BRL` |
 | `USD` | dólar / dólares              | dollar / dollars           | `Currencies.USD` |
 | `EUR` | euro / euros                 | euro / euros               | `Currencies.EUR` |
 | `GBP` | libra / libras *(feminine)*  | pound / pounds             | `Currencies.GBP` |
